@@ -79,3 +79,7 @@ L = _kick(res, sub_shape)
 res_ = np.array(L).reshape(view_shape)
 
 print(np.min(sub_matrices==res_))
+
+AA = np.einsum('klij,ij->kl', sub_matrices, B)
+BB = AA / 9
+
