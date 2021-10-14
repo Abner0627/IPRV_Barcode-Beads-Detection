@@ -26,7 +26,36 @@ def _pad(X, k):
         X_ = np.copy(X)
     return X_
 
+#%%
+A = np.array([[0,0,0,0,0,0,0,0],
+             [0,0,0,1,1,1,1,0],
+             [0,0,0,1,1,1,1,0],
+             [0,1,1,1,1,1,1,0],
+             [0,1,1,1,1,1,1,0],
+             [0,1,1,1,1,0,0,0],
+             [0,1,1,1,1,0,0,0],
+             [0,0,0,0,0,0,0,0]])
 
+B = np.ones((3, 3))
+sub_shape = (3,3)
+
+def _kick(res, sub_shape):
+    L = []
+    for i in res:
+        if i.shape==sub_shape:
+            L.append(i)
+    return L
+
+H, W = A.shape
+Hk, Wk = B.shape
+
+res = []
+for h in range(H):
+    for w in range(W):
+       res.append(A[h:h+Hk, w:w+Wk]) 
+L = _kick(res, sub_shape)
+
+'''
 #%%
 # =============================================================================
 # A_ = np.array([[ 0,  1,  2,  3,  4],
@@ -82,4 +111,4 @@ print(np.min(sub_matrices==res_))
 
 AA = np.einsum('klij,ij->kl', sub_matrices, B)
 BB = AA / 9
-
+'''
