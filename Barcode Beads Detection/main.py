@@ -30,4 +30,4 @@ img_e = func._erosion(img_d, config.k_e)
 #%% save
 result = (~img_e.astype(bool)) * 255
 fn = args.image.split('/')[-1]
-cv2.imwrite(os.path.join(args.ouput, 'result_' + fn), result)
+cv2.imwrite(os.path.join(args.output, 'result_' + fn), result)
