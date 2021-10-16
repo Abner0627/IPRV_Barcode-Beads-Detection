@@ -25,12 +25,16 @@ image = func._rgb2gray(image_org)
 img_cv = func._conv2d(image, config.k_cv)
 #%% adpt_thold
 img_adpt_thold = func._adpt_thold(img_cv, kernel_size=config.k_adpt_size, c=config.c)
-#%% dilation
-img_d = func._dilation(img_adpt_thold, config.k_d)
 #%% erosion
-img_e = func._erosion(img_d, config.k_e)
+img_e = func._erosion(img_adpt_thold, config.k_e)
+#%% dilation
+img_d = func._dilation(img_e, config.k_d)
+img_d = func._dilation(img_d, config.k_d)
+img_d = func._dilation(img_d, config.k_d)
+#%% rm
+final = func._rm(img_d)
 #%% save
-result = (~img_e.astype(bool)) * 255
+result = (~final.astype(bool)) * 255
 fn = args.image.split('/')[-1]
 cv2.imwrite(os.path.join(args.output, 'result_' + fn), result)
 

@@ -51,20 +51,25 @@ def _conv2d(X, k):
     cv = np.einsum('klij,ij->kl', sub_matrices, k_)
     return cv    
 
-def gaussian_kernel(size, sigma):
+def gaussian_kernel(size):
     size = int(size) // 2
+    sigma = 0.3 * ((size*2 - 1) * 0.5 - 1) + 0.8
     x, y = np.mgrid[-size:size+1, -size:size+1]
     normal = 1 / (2.0 * np.pi * sigma**2)
     g =  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
     return g  
 
 def _adpt_thold(image, kernel_size, c):
-    sigma = 0.3 * ((kernel_size - 1) * 0.5 - 1) + 0.8
-    k = gaussian_kernel(kernel_size, sigma=sigma)
+    k = gaussian_kernel(kernel_size)
     img_pad = _pad(image, k)
     view_shape = tuple(np.subtract(img_pad.shape, k.shape) + 1) + k.shape
     strides = img_pad.strides + img_pad.strides
     sub_matrices = as_strided(img_pad, view_shape, strides) 
-    thold = np.einsum('klij,ij->kl', sub_matrices, k) - c
-    img_adpt_thold = (~np.greater(image, thold)) / np.sum(k) * 1
+    thold = np.einsum('klij,ij->kl', sub_matrices, k) / np.sum(k) - c
+    img_adpt_thold = np.less(image, thold)
     return img_adpt_thold
+
+def _rm(img):
+    x = np.copy(img)
+    x[3200:, :300] = 0
+    return x
