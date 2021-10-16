@@ -1,9 +1,11 @@
 import cv2
 import argparse
 import os
+import time
 import func
 import config
 
+tStart = time.time()
 #%% args
 parser = argparse.ArgumentParser()
 parser.add_argument('-I','--image',
@@ -30,4 +32,7 @@ img_e = func._erosion(img_d, config.k_e)
 #%% save
 result = (~img_e.astype(bool)) * 255
 fn = args.image.split('/')[-1]
-cv2.imwrite(os.path.join(args.ouput, 'result_' + fn), result)
+cv2.imwrite(os.path.join(args.output, 'result_' + fn), result)
+
+tEnd = time.time()
+print ("\n" + "It cost {:.4f} sec" .format(tEnd-tStart))
