@@ -116,6 +116,8 @@ def _pad(X, k, padder=0):
         # 當convolution後的大小與原本影像相同時，則僅作複製
     return X_    
 ```
+假設原影像為3x3的矩陣，kernel為2x2，則sub_matrices示意圖如下(右)：
+![Imgur](https://i.imgur.com/HB3MQKC.png)
 
 #### Adaptive thresholding
 ```py
