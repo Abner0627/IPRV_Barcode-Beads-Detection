@@ -45,8 +45,8 @@ Project
 ## 方法說明
 ### 概述
 ```flow
-st=>start: 輸入影像
-ed=>end: 輸出影像
+st=>start: Image input
+ed=>end: Image output
 op1=>operation: Convert RGB to grayscale
 op2=>operation: 2d convolution
 op3=>operation: Adaptive thresholding
@@ -95,8 +95,8 @@ def _conv2d(X, k):
     # 計算convolution的視野大小(H', W', Hk, Wk) 
     # H' = H - (Hk - 1)，此處H'需等於H
     strides = X_pad.strides + X_pad.strides
-    # 在0維時，每個元素間隔皆為4 byte (X_pad[i, 0] to X_pad[i, 1])；
-    # 在1維時，每個元素間隔皆為4*W byte (X_pad[0, j] to X_pad[1, j])。
+    # 在零維時，每個元素間隔皆為4 byte (X_pad[i, 0] to X_pad[i, 1])；
+    # 在一維時，每個元素間隔皆為4*W byte (X_pad[0, j] to X_pad[1, j])。
     # 由於前後兩個維度的計算方式一樣，故最終strides為(4W, 4, 4W, 4)    
     sub_matrices = as_strided(X_pad, view_shape, strides) 
     # 將X_pad依kernel大小分割並排成view_shape大小的矩陣
@@ -162,8 +162,102 @@ def gaussian_kernel(size):
     sigma = 0.3 * ((size*2 - 1) * 0.5 - 1) + 0.8
     # 計算高斯kernel的sigma值
     x, y = np.mgrid[-size:size+1, -size:size+1]
+    # 預設xy方向的數值
     normal = 1 / (2.0 * np.pi * sigma**2)
     g =  np.exp(-((x**2 + y**2) / (2.0*sigma**2))) * normal
+    # 計算二維高斯kernel
     return g  
-
 ```
+二維高斯kernel計算方式：
+![Imgur](https://i.imgur.com/FKAEBks.png)
+
+#### Erosion
+```py
+# main.py
+img_e = func._erosion(img_adpt_thold, config.k_e)
+# 使用erosion去除邊緣
+```
+```py
+# config.py
+k_e = np.ones((5, 5))
+# 使用數值全部為1的矩陣當作kernel，此處大小為5x5
+```
+```py
+# func.py
+def _erosion(X, k):
+    X_pad = _pad(X, k)
+    view_shape = tuple(np.subtract(X_pad.shape, k.shape) + 1) + k.shape
+    strides = X_pad.strides + X_pad.strides
+    sub_matrices = as_strided(X_pad, view_shape, strides) 
+    cv = np.einsum('klij,ij->kl', sub_matrices, k)
+    # 以上五步同_conv2d()
+    return cv // (k.shape[0] * k.shape[1])
+    # 當cv內元素除以kernel大小小於1時，表示該window內有包含背景，故定義為0；
+    # 當cv內元素除以kernel大小大於1時，表示該window內只有前景，定義為1。
+```
+
+#### Dilation
+```py
+# main.py
+img_d = func._dilation(img_e, config.k_d)
+img_d = func._dilation(img_d, config.k_d)
+img_d = func._dilation(img_d, config.k_d)
+# 此處進行了三次dilation將影像邊緣擴增
+```
+```py
+# config.py
+k_d = np.ones((5, 5))
+# 使用數值全部為1的矩陣當作kernel，此處大小為5x5
+```
+```py
+# func.py
+def _dilation(X, k):
+    X = ~(X.astype(bool)) * 1
+    # 將dilation理解成反過來對背景做erosion，
+    # 故此處將前後景數值對換
+    X_pad = _pad(X, k, padder=1)
+    # 由於數值經過對換，故此處的padder為1
+    view_shape = tuple(np.subtract(X_pad.shape, k.shape) + 1) + k.shape
+    strides = X_pad.strides + X_pad.strides
+    sub_matrices = as_strided(X_pad, view_shape, strides) 
+    cv = np.einsum('klij,ij->kl', sub_matrices, k)
+    cv_ = cv // (k.shape[0] * k.shape[1]) 
+    # 以上五步同_conv2d()    
+    return ~(cv_.astype(bool)) * 1
+    # 最後將數值調換回來
+```
+
+#### Remove border
+由於鏡頭邊框無法用上述方式去除，故此處僅能手動移除，如下圖示。
+![Imgur](https://i.imgur.com/KJbAmmf.png)
+```py
+# main.py
+final = func._rm(img_d)
+# 移除邊框
+```
+```py
+# func.py
+def _rm(img):
+    x = np.copy(img)
+    x[3200:, :300] = 0
+    # 定義H > 3200 & W < 300的範圍為鏡頭，將其定義為0
+    return x
+```
+
+#### Image output
+```py
+result = (~final.astype(bool)) * 255
+# 把bool形式的影像轉為0~255的陣列
+fn = args.image.split('/')[-1]
+# 擷取輸入影像的檔名
+cv2.imwrite(os.path.join(args.output, 'result_' + fn), result)
+# 使用cv2儲存影像，路徑由-O <path>決定，預測為./result
+```
+
+### 影像結果對比
+W_A1_0_3
+![Imgur](https://i.imgur.com/Apx0OKB.png)
+W_A2_0_3
+![Imgur](https://i.imgur.com/DvAsm7e.png)
+W_A3_0_3
+![Imgur](https://i.imgur.com/NwgiWzT.png)
