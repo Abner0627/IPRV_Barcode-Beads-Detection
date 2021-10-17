@@ -251,3 +251,8 @@ W_A2_0_3
 ![Imgur](https://i.imgur.com/DvAsm7e.png)
 W_A3_0_3
 ![Imgur](https://i.imgur.com/NwgiWzT.png)
+由上圖可看出，越靠近中間，偵測的效果越好，其顆粒越大；\
+然而越往外側顆粒點越小。\
+同時為了偵測外側barcode beads，\
+故此處erosion kernel較小，也造成影像中非顆粒點的地方也被偵測出來，\
+因此之後實作或許可用CCL等方式篩選顆粒點大小，以過濾雜訊。
