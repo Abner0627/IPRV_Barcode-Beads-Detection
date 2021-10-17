@@ -44,17 +44,7 @@ Project
 
 ## 方法說明
 ### 概述
-```flow
-st=>start: Image input
-ed=>end: Image output
-op1=>operation: Convert RGB to grayscale
-op2=>operation: 2d convolution
-op3=>operation: Adaptive thresholding
-op4=>operation: Erosion
-op5=>operation: Dilation
-op6=>operation: Remove border
-st->op1->op2->op3->op4->op5->op6->ed
-```
+![Imgur](https://i.imgur.com/xbrW9sQ.png)
 
 ### 程式碼說明
 #### Convert RGB to Grayscale
