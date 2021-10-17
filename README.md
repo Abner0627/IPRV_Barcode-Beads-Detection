@@ -85,8 +85,8 @@ def _conv2d(X, k):
     # 計算convolution的視野大小(H', W', Hk, Wk) 
     # H' = H - (Hk - 1)，此處H'需等於H
     strides = X_pad.strides + X_pad.strides
-    # 在零維時，每個元素間隔皆為4 byte (X_pad[i, 0] to X_pad[i, 1])；
-    # 在一維時，每個元素間隔皆為4*W byte (X_pad[0, j] to X_pad[1, j])。
+    # 在W方向時，元素間隔皆為4 byte (X_pad[i, 0] to X_pad[i, 1])；
+    # 在H方向時，元素間隔皆為4*W byte (X_pad[0, j] to X_pad[1, j])。
     # 由於前後兩個維度的計算方式一樣，故最終strides為(4W, 4, 4W, 4)    
     sub_matrices = as_strided(X_pad, view_shape, strides) 
     # 將X_pad依kernel大小分割並排成view_shape大小的矩陣
