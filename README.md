@@ -44,7 +44,7 @@ Project
 
 ## 方法說明
 ### 概述
-![Imgur](https://i.imgur.com/xbrW9sQ.png)
+![Imgur](https://i.imgur.com/OWtMeSx.png)
 
 ### 程式碼說明
 #### Convert RGB to Grayscale
