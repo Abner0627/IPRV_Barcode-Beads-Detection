@@ -27,12 +27,12 @@ img_cv = func._conv2d(image, config.k_cv)
 img_adpt_thold = func._adpt_thold(img_cv, kernel_size=config.k_adpt_size, c=config.c)
 #%% erosion
 img_e = func._erosion(img_adpt_thold, config.k_e)
+img_e = func._erosion(img_e, config.k_e)
 #%% dilation
-img_d = func._dilation(img_e, config.k_d)
-img_d = func._dilation(img_d, config.k_d)
-img_d = func._dilation(img_d, config.k_d)
+# img_d = func._dilation(img_e, config.k_d)
+
 #%% rm
-final = func._rm(img_d)
+final = func._rm(img_e)
 #%% save
 result = (~final.astype(bool)) * 255
 fn = args.image.split('/')[-1]
