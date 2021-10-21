@@ -32,9 +32,9 @@ img_e = func._erosion(img_e, config.k_e)
 # img_d = func._dilation(img_e, config.k_d)
 
 #%% rm
-final = func._rm(img_e)
+# final = func._rm(img_e)
 #%% save
-result = (~final.astype(bool)) * 255
+result = (~img_e.astype(bool)) * 255
 fn = args.image.split('/')[-1]
 cv2.imwrite(os.path.join(args.output, 'result_' + fn), result)
 

@@ -71,8 +71,8 @@ img_cv = func._conv2d(image, config.k_cv)
 ```
 ```py
 # config.py
-k_cv = np.ones((11, 11))
-# convolution的kernel為11x11且數值全部為1之矩陣
+k_cv = np.ones((5, 5))
+# convolution的kernel為5x5且數值全部為1之矩陣
 ```
 ```py
 # func.py
@@ -127,10 +127,10 @@ img_adpt_thold = func._adpt_thold(img_cv, kernel_size=config.k_adpt_size, c=conf
 ```
 ```py
 # config.py
-k_adpt_size = 111
-# 設定adaptive thresholding中的高斯kernel大小，此處為111
-c = 3
-# 參照cv2.adaptiveThreshold設定閥值之偏移量，此處為3
+k_adpt_size = 51
+# 設定adaptive thresholding中的高斯kernel大小，此處為51
+c = 5
+# 參照cv2.adaptiveThreshold設定閥值之偏移量，此處為5
 ```
 ```py
 # func.py
@@ -167,11 +167,12 @@ def gaussian_kernel(size):
 ```py
 # main.py
 img_e = func._erosion(img_adpt_thold, config.k_e)
+img_e = func._erosion(img_e, config.k_e)
 # 使用erosion去除邊緣
 ```
 ```py
 # config.py
-k_e = np.ones((5, 5))
+k_e = np.ones((3, 3))
 # 使用數值全部為1的矩陣當作kernel，此處大小為5x5
 ```
 ```py
@@ -188,57 +189,9 @@ def _erosion(X, k):
     # 當cv內元素除以kernel大小大於1時，表示該window內只有前景，定義為1。
 ```
 
-#### Dilation
-```py
-# main.py
-img_d = func._dilation(img_e, config.k_d)
-img_d = func._dilation(img_d, config.k_d)
-img_d = func._dilation(img_d, config.k_d)
-# 此處進行了三次dilation將影像邊緣擴增
-```
-```py
-# config.py
-k_d = np.ones((5, 5))
-# 使用數值全部為1的矩陣當作kernel，此處大小為5x5
-```
-```py
-# func.py
-def _dilation(X, k):
-    X = ~(X.astype(bool)) * 1
-    # 將dilation理解成反過來對背景做erosion，
-    # 故此處將前後景數值對換
-    X_pad = _pad(X, k, padder=1)
-    # 由於數值經過對換，故此處的padder為1
-    view_shape = tuple(np.subtract(X_pad.shape, k.shape) + 1) + k.shape
-    strides = X_pad.strides + X_pad.strides
-    sub_matrices = as_strided(X_pad, view_shape, strides) 
-    cv = np.einsum('klij,ij->kl', sub_matrices, k)
-    cv_ = cv // (k.shape[0] * k.shape[1]) 
-    # 以上五步同_conv2d()    
-    return ~(cv_.astype(bool)) * 1
-    # 最後將數值調換回來
-```
-
-#### Remove border
-由於鏡頭邊框無法用上述方式去除，故此處僅能手動移除，如下圖示。
-![Imgur](https://i.imgur.com/KJbAmmf.png)
-```py
-# main.py
-final = func._rm(img_d)
-# 移除邊框
-```
-```py
-# func.py
-def _rm(img):
-    x = np.copy(img)
-    x[3200:, :300] = 0
-    # 定義H > 3200 & W < 300的範圍為鏡頭，將其定義為0
-    return x
-```
-
 #### Image output
 ```py
-result = (~final.astype(bool)) * 255
+result = (~img_e.astype(bool)) * 255
 # 把bool形式的影像轉為0~255的陣列
 fn = args.image.split('/')[-1]
 # 擷取輸入影像的檔名
@@ -248,11 +201,15 @@ cv2.imwrite(os.path.join(args.output, 'result_' + fn), result)
 
 ### 影像結果對比
 W_A1_0_3
-![Imgur](https://i.imgur.com/Apx0OKB.png)
+![Imgur](https://i.imgur.com/SV6BopZ.jpg)
+![Imgur](https://i.imgur.com/lejeZs8.jpg)
 W_A2_0_3
-![Imgur](https://i.imgur.com/DvAsm7e.png)
+![Imgur](https://i.imgur.com/lVLvXmg.jpg)
+![Imgur](https://i.imgur.com/AcVYGXQ.jpg)
 W_A3_0_3
-![Imgur](https://i.imgur.com/NwgiWzT.png)
+![Imgur](https://i.imgur.com/XJPmnQS.jpg)
+![Imgur](https://i.imgur.com/axtfgYl.jpg)
+
 由上圖可看出，越靠近中間，偵測的效果越好，其顆粒越大；\
 然而越往外側顆粒點越小。\
 同時為了偵測外側barcode beads，\
