@@ -173,7 +173,7 @@ img_e = func._erosion(img_e, config.k_e)
 ```py
 # config.py
 k_e = np.ones((3, 3))
-# 使用數值全部為1的矩陣當作kernel，此處大小為5x5
+# 使用數值全部為1的矩陣當作kernel，此處大小為3x3
 ```
 ```py
 # func.py
